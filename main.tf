@@ -90,3 +90,18 @@ resource "aws_s3_bucket_policy" "trail_logs" {
 
   depends_on = [aws_s3_bucket_public_access_block.trail_logs]
 }
+
+resource "aws_cloudtrail" "this" {
+  name                          = local.trail_name
+  s3_bucket_name                = aws_s3_bucket.trail_logs.id
+  is_multi_region_trail         = false
+  include_global_service_events = true
+  enable_logging                = true
+
+  event_selector {
+    read_write_type           = "All"
+    include_management_events = true
+  }
+
+  depends_on = [aws_s3_bucket_policy.trail_logs]
+}

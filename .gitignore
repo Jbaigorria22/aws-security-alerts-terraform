@@ -4,3 +4,4 @@
 crash.log
 terraform.tfvars
 tfplan
+test-event.json

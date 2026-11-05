@@ -3,6 +3,8 @@
 Real-time AWS security alerts, fully provisioned with Terraform.
 A hands-on lab built while preparing for the **HashiCorp Terraform Associate (004)** exam.
 
+![Architecture](docs/architecture.png)
+
 ```
 AWS action (any Region) → multi-Region CloudTrail → EventBridge
    ├─ us-east-1: central rule ────────────────────────────────→ SNS → email

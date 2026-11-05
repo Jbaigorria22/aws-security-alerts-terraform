@@ -115,3 +115,46 @@ resource "aws_sns_topic_subscription" "email" {
   protocol  = "email"
   endpoint  = var.alert_email
 }
+
+resource "aws_cloudwatch_event_rule" "root_login" {
+  name        = "${var.project_name}-root-login"
+  description = "Root user signed in to the AWS console"
+
+  event_pattern = jsonencode({
+    "detail-type" = ["AWS Console Sign In via CloudTrail"]
+    detail = {
+      userIdentity = {
+        type = ["Root"]
+      }
+    }
+  })
+}
+
+resource "aws_cloudwatch_event_target" "root_login_to_sns" {
+  rule      = aws_cloudwatch_event_rule.root_login.name
+  target_id = "sns"
+  arn       = aws_sns_topic.alerts.arn
+}
+
+data "aws_iam_policy_document" "sns_topic" {
+  statement {
+    sid       = "AllowEventBridgePublish"
+    actions   = ["sns:Publish"]
+    resources = [aws_sns_topic.alerts.arn]
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+    condition {
+      test     = "ArnEquals"
+      variable = "aws:SourceArn"
+      values   = [aws_cloudwatch_event_rule.root_login.arn]
+    }
+  }
+}
+
+resource "aws_sns_topic_policy" "alerts" {
+  arn    = aws_sns_topic.alerts.arn
+  policy = data.aws_iam_policy_document.sns_topic.json
+}
